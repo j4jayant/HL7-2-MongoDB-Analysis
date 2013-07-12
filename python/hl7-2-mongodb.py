@@ -5,6 +5,12 @@ This library uses pymongo 2.5.2 for MongoDB operations
 This program has been tested on Windows 7 & Ubuntu 13.04 with python 2.7.5
 """
 
+__version__ = '1.0.1'
+__author__ = 'Jayant Singh'
+__license__ = 'MIT'
+__copyright__ = 'Copyright 2013, Jayant Singh <www.j4jayant.com>'
+__url__ = 'http://www.j4jayant.com'
+
 import sys, getopt
 import hl7
 from pymongo import *
@@ -116,50 +122,79 @@ def readHL7File(ifile):
 		
 #print (Messages);
 
-def insertDocuments(Messages):
-	client = MongoClient('localhost', 27017)
-
-	db = client['test']
-
-	message_collection = db['Message']
-
-	for message in Messages:
-		try:
-			h = hl7.parse(message);
-			doc = hl72MongoDocument(h);
-			doc_id = message_collection.insert(doc);
-			print(doc_id);
-		except:
-			print('Error inserting document: Error: ' + unicode(sys.exc_info()[0]) + "\n" + "Message: " + unicode(h[0]));
+def insertDocuments(Messages, feed, db, port):
+    dbServer = 'localhost';
+    dbPort = 27017;
+    
+    if len(db) > 0:
+        dbServer = db;
+    if len(port) > 0:
+        try:
+            dbPort = int(port);
+        except:
+            print("Invalid db port provided");
+            return "";
+    
+    client = MongoClient(dbServer, dbPort);
+    dbName = feed + '_Analysis';
+    db = client[dbName];
+    message_collection = db['Message'];
+    totalMessages = len(Messages);
+    msgCount = 1;
+    print("Total Messages: " + str(totalMessages));
+    for message in Messages:
+        try:
+            print("Processing Message " + str(msgCount) + " of " + str(totalMessages));
+            h = hl7.parse(message);
+            doc = hl72MongoDocument(h);
+            doc_id = message_collection.insert(doc);
+            print("Inserted Message " + str(msgCount) + " with _id: " + doc_id);
+        except:
+            print("Error inserting document " + str(msgCount) + " Error: " + unicode(sys.exc_info()[0]) + "\n");
+        msgCount += 1;
 
 
 total = len(sys.argv)
 cmdargs = str(sys.argv)
 ifile=''
+feed=''
+db=''
+port=''
 
 try:
-    myopts, args = getopt.getopt(sys.argv[1:],"i:o:")
+    myopts, args = getopt.getopt(sys.argv[1:],"f:i:d:p:")
     if len(myopts) <= 0:
-        print("No input file detected\n");
-        print("Usage: %s -i input" % sys.argv[0]+"\n")
+        print("Invalid number of arguments detected\n");
+        print("Usage: %s -f feed -i input -d dbServer -p dbPort" % sys.argv[0]+"\n")
 		
     for o, a in myopts:
         if o == '-i':
-            ifile=a
-            Messages = readHL7File(ifile);
-            try:
-                if(isinstance(Messages,list)):
-                    print('Total Messages: ' + str(len(Messages)) + "\n");
-                    insertDocuments(Messages);
-                else:
-                    print("No messages to process\n");
-            except:
-                print("Error inserting document"+ unicode(sys.exc_info()[0]) + "\n");
+            ifile=a;
+        elif o == '-f':
+            feed=a;
+        elif o == '-d':
+            db=a;
+        elif o == '-p':
+            port=a;
         else:
-            print("Usage: %s -i input" % sys.argv[0] + "\n")
+            print("Usage: %s -f feed -i input -d dbServer -p dbPort" % sys.argv[0]+"\n")
 except:
-	print("Please enter valid arguments");
-	print("Usage: %s -i input" % sys.argv[0] + "\n")
-
+    print("Please enter valid arguments");
+    print("Usage: %s -f feed -i input -d dbServer -p dbPort" % sys.argv[0]+"\n")
+	
+if (len(ifile) > 0 and len(feed) > 0):
+    print('Feed Name: ' + feed);
+    print('Input File: ' + ifile);
+	
+    Messages = readHL7File(ifile);
+    try:
+        if(isinstance(Messages,list)):
+            insertDocuments(Messages, feed, db, port);
+        else:
+            print("No messages to process\n");
+    except:
+        print("Error inserting document"+ unicode(sys.exc_info()[0]) + "\n");
+else:
+	print("No Input file or Feed Name detected");
 
 

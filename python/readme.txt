@@ -1,28 +1,37 @@
 hl7-2-mongodb is a simple program to store HL7 messages in MongoDB for analysis. 
 
+This program is release under MIT license
 
-This library uses python-hl7 0.2.5 to parse messages of Health Level 7 (HL7) version 2.x into Python objects.
+This program uses python-hl7 0.2.5 to parse messages of Health Level 7 (HL7) version 2.x into Python objects.
 
-This library uses pymongo 2.5.2 for MongoDB operations.
+This program uses pymongo 2.5.2 for MongoDB operations.
 
 
 This program has been tested on Windows 7 & Ubuntu 13.04 with python 2.7.5
 
-To run the program type
+To run the program install following prerequisites
 
-install python-hl7 0.2.5 module
-install pymongo 
+python-hl7 0.2.5
+pymongo 2.5.2
 
 Windows 
 --------
-command prompt>python hl7-2-mongodb.py -i <inputfilepath>
+command prompt>python hl7-2-mongodb.py -f <HL7FeedName> -i <inputfilepath> [-d <dbServer> -p <dbPort>]
+
 
 Linux
 ------
 
-$./hl7-2-mongodb.py -i <inputfilepath>
+$./hl7-2-mongodb.py -f <HL7FeedName> -i <inputfilepath> [-d <dbServer> -p <dbPort>]
 
-<inputfilepath> is the file containing raw HL7 messages
+Note:
+------
+<HL7FeedName> required, is the name of message feed that you want to analyze i.e. ADT, MDM, ORU etc
+<inputfilepath> required, is the file containing raw HL7 messages
+<dbServer> optional, is the servername/ip of MongoDB server, if not provided default is localhost
+<dbPort> optional, is the port on which MongoDB server is running, if not provided default is 27017
+
+
 
 For HL7 message analysis follow articles
 
